@@ -30,6 +30,7 @@ public class TodoServer {
             System.out.println("Starting server at " + port + "...");
 
             JSONParser jsonParser = new JSONParser( );
+
             while (true) {
                 if (!bufferedReader.ready( )) {
                     break;
