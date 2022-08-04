@@ -13,8 +13,8 @@ import java.net.Socket;
 
 public class TodoServer {
 
-    private int port;
-    private Todos todos;
+    private final int port;
+    private final Todos todos;
 
     public TodoServer(int port, Todos todos) {
 
@@ -22,38 +22,48 @@ public class TodoServer {
         this.todos = todos;
     }
 
-    public void start() throws IOException {
-        try (ServerSocket serverSocket = new ServerSocket(port);
-             Socket socket = serverSocket.accept( );
-             PrintWriter printWriter = new PrintWriter(socket.getOutputStream( ), true);
-             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream( )))) {
-            System.out.println("Starting server at " + port + "...");
+    public void start() {
+        System.out.println("Starting server at " + port + "...");
+        try (ServerSocket serverSocket = new ServerSocket(port)) { // Стартуем сервер один(!) раз
+            while (true) { // В цикле(!) принимаем подключения
+                try (
+                        Socket socket = serverSocket.accept();
+                        BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                        PrintWriter out = new PrintWriter(socket.getOutputStream())
+                ) {
+                    // Обработка одного подключения
+                    JSONParser parser = new JSONParser();
+                    String type = null;
+                    String task = null;
+                    final String input = in.readLine();
 
-            JSONParser jsonParser = new JSONParser( );
-
-            while (true) {
-                if (!bufferedReader.ready( )) {
-                    break;
-                }
-                String json = bufferedReader.readLine( );
-                Object obj = jsonParser.parse(json);
-                JSONObject jsonObj = (JSONObject) obj;
-                for (int i = 0; i < jsonObj.size( ); ) {
-                    String typeTodos = (String) jsonObj.get("type");
-                    if (typeTodos.equals("ADD")) {
-                        String addTodos = (String) jsonObj.get("task");
-                        todos.addTask(addTodos);
-                    } else {
-                        String deleteTodos = (String) jsonObj.get("task");
-                        todos.removeTask(deleteTodos);
+                    if (input.equals("end")) {
+                        System.out.println("Connection closed");
+                        return;
                     }
-                    i = i + 2;
+
+                    try {
+                        Object obj = parser.parse(input);
+                        JSONObject jsonObject = (JSONObject) obj;
+                        type = (String) jsonObject.get("type");
+                        task = (String) jsonObject.get("task");
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
+
+                    if (type.equals("ADD")) {
+                        todos.addTask(task);
+                    } else {
+                        if (type.equals("REMOVE")) {
+                            todos.removeTask(task);
+                        }
+                    }
+                    out.println(todos.getAllTasks());
                 }
             }
-            String s = todos.getAllTasks( );
-            printWriter.println(s);
-        } catch (ParseException e) {
-            e.printStackTrace( );
+        } catch (IOException ex) {
+            System.out.println("Не могу стартовать сервер");
+            ex.printStackTrace();
         }
     }
 }
