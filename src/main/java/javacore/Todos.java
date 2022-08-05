@@ -1,16 +1,15 @@
 package javacore;
 
-import java.util.*;
-import java.util.concurrent.LinkedTransferQueue;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class Todos {
 
     List<String> taskList;
-    StringBuilder stringBuilder = new StringBuilder( );
 
     public Todos() {
-        taskList = new ArrayList<>( );
+        taskList = new ArrayList<>();
     }
 
     public void addTask(String task) {
@@ -28,12 +27,13 @@ public class Todos {
     }
 
     public String getAllTasks() {
-
+        StringBuilder stringBuilder = new StringBuilder();
         Collections.sort(taskList);
         for (String st : taskList) {
-            stringBuilder.append(st + " ");
+            stringBuilder.append(st);
+            stringBuilder.append(" ");
         }
-        return stringBuilder.toString( ).trim( );
+        return stringBuilder.toString().trim();
     }
 
 }
